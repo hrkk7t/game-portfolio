@@ -20,8 +20,8 @@ const mapData = [
 const artData = [
     { title: 'WEB SITE', desc: 'コーポレートサイト制作\n使用技術: HTML/CSS/JS' },
     { title: 'APP UI', desc: 'モバイルアプリUIデザイン\nFigmaを使用' },
-    { title: 'GRAPHIC', desc: '印刷物\nPhotoshop/Illustrator' },
-    { title: 'LOGO', desc: 'ロゴ制作' },
+    { title: 'GRAPHIC', desc: 'イベントポスター\nPhotoshop/Illustrator' },
+    { title: 'LOGO', desc: 'ブランドロゴ制作' },
     { title: 'ILLUST', desc: 'オリジナルキャラクター' }
 ];
 
@@ -35,7 +35,7 @@ const config = {
     width: 800,
     height: 600,
     parent: 'game-container',
-    backgroundColor: '#050505', // 背景色（黒に近い色）
+    backgroundColor: '#050505', // 背景色
     pixelArt: true, // ドット絵をくっきり表示
     scale: {
         mode: Phaser.Scale.FIT,
@@ -59,8 +59,12 @@ const btnState = { up: false, down: false, left: false, right: false };
 const game = new Phaser.Game(config);
 
 function preload() {
-    // 32x32のフレームサイズを指定して読み込み（アニメーション用）
-    this.load.spritesheet('ghost', 'player.png', { frameWidth: 32, frameHeight: 32 });
+    // 【重要】32x32pxで区切って読み込みます
+    // 画像サイズが正しく96x128pxであればこれで正常に分割されます
+    this.load.spritesheet('ghost', 'player.png', { 
+        frameWidth: 32, 
+        frameHeight: 32 
+    });
     
     this.load.image('wall', 'wall.png');
     this.load.image('floor', 'floor.png');
@@ -72,6 +76,7 @@ function create() {
     interactGroup = this.physics.add.staticGroup();
     let artIndex = 0;
 
+    // --- マップ生成 ---
     for (let row = 0; row < mapData.length; row++) {
         for (let col = 0; col < mapData[row].length; col++) {
             const x = col * TILE_SIZE + TILE_SIZE / 2;
@@ -85,8 +90,7 @@ function create() {
             } else {
                 floorTile = this.add.image(x, y, 'floor').setDisplaySize(TILE_SIZE, TILE_SIZE);
             }
-            // 少しだけ暗くして雰囲気を出す（視認性は確保）
-            floorTile.setTint(0xbbbbbb);
+            floorTile.setTint(0xbbbbbb); // 少し暗く
 
             // 壁・作品・受付
             if (tileType === 1) {
@@ -103,7 +107,6 @@ function create() {
                 wall.setImmovable(true);
 
                 const data = artData[artIndex] || { title: 'No Data', desc: '...' };
-                // 作品シンボル（シアン色）
                 const art = this.add.rectangle(x, y, 40, 40, 0x00bcd4); 
                 art.setStrokeStyle(2, 0xffffff);
                 
@@ -117,37 +120,54 @@ function create() {
                 this.physics.add.existing(desk, true);
                 desk.setData('info', receptionData);
                 interactGroup.add(desk);
-                // 受付の人（仮）
                 this.add.circle(x, y - 10, 10, 0xffffff);
             }
         }
     }
 
-    // --- プレイヤー設定 ---
+    // --- プレイヤー（おばけ）の設定 ---
+    // 初期位置 400, 500 に生成
     player = this.physics.add.sprite(400, 500, 'ghost');
-    player.setScale(1.5); // おばけを少し大きく
+    
+    // 【重要】表示順序（Depth）を上げて、床より手前に表示させる
+    player.setDepth(10); 
+    
+    // サイズ調整
+    player.setScale(1.5); 
     player.setOrigin(0.5, 0.5);
     player.setCollideWorldBounds(true);
+    // 当たり判定のサイズを少し小さくして、歩きやすくする
+    player.body.setSize(20, 20);
+    player.body.setOffset(6, 12);
 
     // --- アニメーション定義 ---
+    // 画像の並び順（左上から右へ 0,1,2...）に基づき設定
+    
+    // 下向き (1行目: 0, 1, 2)
     this.anims.create({
         key: 'down',
         frames: this.anims.generateFrameNumbers('ghost', { start: 0, end: 2 }),
         frameRate: 8,
         repeat: -1
     });
+
+    // 左向き (2行目: 3, 4, 5)
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('ghost', { start: 3, end: 5 }),
         frameRate: 8,
         repeat: -1
     });
+
+    // 右向き (3行目: 6, 7, 8)
     this.anims.create({
         key: 'right',
         frames: this.anims.generateFrameNumbers('ghost', { start: 6, end: 8 }),
         frameRate: 8,
         repeat: -1
     });
+
+    // 上向き (4行目: 9, 10, 11)
     this.anims.create({
         key: 'up',
         frames: this.anims.generateFrameNumbers('ghost', { start: 9, end: 11 }),
@@ -155,7 +175,9 @@ function create() {
         repeat: -1
     });
 
-    player.play('down'); // 初期状態
+    // 初期状態は下向きで停止
+    player.play('down');
+    player.anims.stop();
 
     this.physics.add.collider(player, walls);
     this.physics.add.overlap(player, interactGroup, checkItem, null, this);
@@ -174,37 +196,45 @@ function update() {
     
     player.body.setVelocity(0);
     const speed = 150;
+    
+    // 移動フラグ
     let moving = false;
 
-    // 左移動
+    // --- キー入力とアニメーション制御 ---
+    
+    // 左
     if (cursors.left.isDown || btnState.left) {
         player.body.setVelocityX(-speed);
+        // true を渡すことで「同じアニメーションならリセットしない」ようにする
         player.anims.play('left', true);
         moving = true;
     } 
-    // 右移動
+    // 右
     else if (cursors.right.isDown || btnState.right) {
         player.body.setVelocityX(speed);
         player.anims.play('right', true);
         moving = true;
     }
-
-    // 上移動
-    if (cursors.up.isDown || btnState.up) {
+    // 上
+    else if (cursors.up.isDown || btnState.up) {
         player.body.setVelocityY(-speed);
-        if (!moving) player.anims.play('up', true);
+        player.anims.play('up', true);
         moving = true;
     } 
-    // 下移動
+    // 下
     else if (cursors.down.isDown || btnState.down) {
         player.body.setVelocityY(speed);
-        if (!moving) player.anims.play('down', true);
+        player.anims.play('down', true);
         moving = true;
     }
 
-    // 停止時はアニメーションストップ
+    // 移動していない時はアニメーションを止める
     if (!moving) {
         player.anims.stop();
+        
+        // 止まった瞬間のフレームを維持するか、
+        // ニュートラル（真ん中の足踏み）に戻すこともできますが、
+        // いったんはstopのみで自然に見えます。
     }
 
     if (Phaser.Input.Keyboard.JustDown(spaceKey) && activeItem) {
