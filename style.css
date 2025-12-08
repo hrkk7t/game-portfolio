@@ -1,8 +1,11 @@
+/* --- フォントのインポート（日本語対応ドットフォント） --- */
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
 /* --- 変数定義 --- */
 :root {
-    --main-bg: #000000;
+    --main-bg: #050505; /* より深い黒 */
     --accent-color: #00bcd4;
-    --text-color: #ffffff;
+    --text-color: #e0f7fa; /* 少し青みがかった白 */
 }
 
 /* --- 基本設定 --- */
@@ -12,175 +15,84 @@ body {
     width: 100vw;
     height: 100vh;
     background-color: var(--main-bg);
-    font-family: "Courier New", monospace;
+    /* フォントをドット風に変更 */
+    font-family: 'DotGothic16', sans-serif; 
     overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
     touch-action: none;
 }
 
-/* --- PC・基本レイアウト（これまでの設定） --- */
-/* ゲーム画面は全画面中央 */
-#game-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-}
-
+/* --- キャンバス（ゲーム画面）の装飾強化 --- */
 canvas {
     border: 2px solid var(--accent-color);
-    box-shadow: 0 0 15px var(--accent-color);
+    /* 光るようなエフェクトを強化 */
+    box-shadow: 0 0 20px var(--accent-color), 0 0 40px rgba(0, 188, 212, 0.4);
     border-radius: 4px;
     -webkit-tap-highlight-color: transparent;
+    image-rendering: pixelated; /* ドット絵をくっきり表示 */
 }
 
-/* モーダルレイヤー */
-#modal-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 20; /* 最前面 */
-    pointer-events: none;
-}
-
+/* --- モーダルのデザイン強化 --- */
 #modal {
     display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
+    width: 85%;
     max-width: 600px;
-    background-color: rgba(0, 0, 0, 0.95);
-    padding: 20px;
+    /* 背景を少し透過させて重厚感を出す */
+    background-color: rgba(10, 10, 15, 0.95);
+    padding: 30px;
     border: 2px solid var(--accent-color);
+    box-shadow: 0 0 20px rgba(0, 188, 212, 0.2) inset; /* 内側にも光を */
     color: var(--text-color);
     pointer-events: auto;
     text-align: center;
     box-sizing: border-box;
+    border-radius: 8px;
 }
 
 #modal h2 {
     margin-top: 0;
     color: var(--accent-color);
-    border-bottom: 1px solid var(--accent-color);
-    padding-bottom: 10px;
-    letter-spacing: 2px;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 15px;
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px var(--accent-color); /* 文字も光らせる */
 }
 
 #modal-content {
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin-bottom: 20px;
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 30px;
     text-align: left;
+    white-space: pre-wrap; /* 改行をそのまま反映 */
 }
 
-.close-btn {
-    background: transparent;
-    color: var(--accent-color);
-    padding: 10px 30px;
-    cursor: pointer;
-    border: 1px solid var(--accent-color);
-    font-weight: bold;
-    border-radius: 4px;
-}
+/* 既存のボタン等のスタイルはそのまま維持してください */
+/* ... (コントローラー関連のCSSは変更なしでOK) ... */
 
-/* コントローラーレイヤー（PC） */
-#controller-layer {
-    position: absolute;
-    bottom: 30px;
-    left: 30px;
-    display: flex;
-    gap: 40px;
-    align-items: flex-end;
-    z-index: 10;
-    pointer-events: auto;
-}
-
-/* ボタン共通 */
-.ctrl-btn {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 8px;
-    transition: 0.1s;
-    touch-action: manipulation;
-    box-shadow: 0 0 5px var(--accent-color) inset;
-    -webkit-tap-highlight-color: transparent;
-}
-.ctrl-btn:active {
-    background: var(--accent-color);
-    color: #000;
-}
-
-.d-pad {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
+/* --- その他の既存コードはそのまま --- */
+#game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1; }
+#modal-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
+.close-btn { background: transparent; color: var(--accent-color); padding: 10px 30px; cursor: pointer; border: 1px solid var(--accent-color); font-weight: bold; border-radius: 4px; transition: 0.2s; }
+.close-btn:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 15px var(--accent-color); }
+#controller-layer { position: absolute; bottom: 30px; left: 30px; display: flex; gap: 40px; align-items: flex-end; z-index: 10; pointer-events: auto; }
+.ctrl-btn { background: rgba(0, 0, 0, 0.6); border: 1px solid var(--accent-color); color: var(--accent-color); cursor: pointer; display: flex; justify-content: center; align-items: center; border-radius: 8px; transition: 0.1s; touch-action: manipulation; box-shadow: 0 0 5px var(--accent-color) inset; -webkit-tap-highlight-color: transparent; }
+.ctrl-btn:active { background: var(--accent-color); color: #000; }
+.d-pad { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .d-row { display: flex; gap: 5px; }
 .arrow-btn { width: 50px; height: 50px; font-size: 24px; }
 .action-pad { display: flex; flex-direction: column; gap: 15px; padding-bottom: 10px; }
 .action-btn { width: 100px; height: 40px; font-size: 14px; font-weight: bold; border-radius: 20px; letter-spacing: 1px; }
 
-/* --- 【重要】スマホ（縦画面）向けのレイアウト変更 --- */
 @media screen and (max-width: 768px) and (orientation: portrait) {
-    /* 画面全体を縦並びのボックスにする */
-    body {
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* 1. ゲーム画面エリア（上60%） */
-    #game-container {
-        position: relative; /* absoluteを解除 */
-        width: 100%;
-        height: 60vh; /* 画面の高さの60% */
-        background-color: #000; /* 余白を黒く */
-        /* 中身のキャンバスを中央寄せ */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    canvas {
-        /* キャンバスがはみ出さないように制限 */
-        max-width: 100%;
-        max-height: 100%;
-    }
-
-    /* 2. コントローラーエリア（下40%） */
-    #controller-layer {
-        position: relative; /* absoluteを解除 */
-        bottom: auto;
-        left: auto;
-        width: 100%;
-        height: 40vh; /* 画面の高さの40% */
-        padding: 0 20px;
-        box-sizing: border-box;
-        
-        /* 左右に配置（ゲームボーイ風） */
-        display: flex;
-        justify-content: space-between;
-        align-items: center; /* 垂直方向中央 */
-        background-color: #111; /* コントローラー背景色（少し明るくして境界をわかるように） */
-        border-top: 2px solid var(--accent-color); /* 境界線 */
-    }
-
-    /* ボタンサイズを少し大きく */
+    body { display: flex; flex-direction: column; }
+    #game-container { position: relative; width: 100%; height: 60vh; background-color: #000; display: flex; justify-content: center; align-items: center; }
+    canvas { max-width: 100%; max-height: 100%; }
+    #controller-layer { position: relative; bottom: auto; left: auto; width: 100%; height: 40vh; padding: 0 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; background-color: #111; border-top: 2px solid var(--accent-color); }
     .arrow-btn { width: 60px; height: 60px; font-size: 28px; }
     .action-btn { width: 100px; height: 50px; }
 }
