@@ -2,7 +2,6 @@
 const TILE_SIZE = 50;
 
 // マップデータ (0:床, 1:壁, 2:作品, 3:赤絨毯, 9:受付)
-// 美術館らしいレイアウトに変更しました
 const mapData = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 2, 0, 0, 1, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 2, 0, 1],
@@ -17,7 +16,7 @@ const mapData = [
     [1, 0, 0, 0, 1, 9, 0, 3, 0, 9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 0, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 1, 1, 1, 1, 1, 0, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] // エントランス
+    [1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ];
 
 const artData = [
@@ -26,7 +25,7 @@ const artData = [
     { title: 'GRAPHIC', desc: 'イベントポスター\nPhotoshop/Illustrator' },
     { title: 'LOGO', desc: 'ブランドロゴ制作' },
     { title: 'ILLUST', desc: 'オリジナルキャラクター' },
-    { title: 'GAME', desc: 'Unityで制作した\n3Dアクションゲーム' } // データを1つ追加しました
+    { title: 'GAME', desc: 'Unityで制作した\n3Dアクションゲーム' }
 ];
 
 const receptionData = {
@@ -62,17 +61,10 @@ const btnState = { up: false, down: false, left: false, right: false };
 const game = new Phaser.Game(config);
 
 function preload() {
-    // 画像の読み込み
-    // player.pngの実際のサイズが不明なため、読み込み後にサイズ処理をします
+    // 【重要修正1】 ここに「実際の画像の1コマのサイズ」を指定します
     this.load.spritesheet('ghost', 'player.png', { 
-        // 一旦、画像をそのまま読み込みます。
-        // ※もし画像が32x32などの場合、ここを間違えると表示されません。
-        // 安全策として、フレーム設定をcreate内で行う方法もありますが、
-        // ここでは一般的なピクセルアートサイズ(32x32〜48x48程度)を想定して
-        // スプライトシートとして読み込みます。
-        // もし表示がおかしい場合は、frameWidth, frameHeightの数値を調整してください。
-        frameWidth: 32,  // ★ここを画像の「1コマの横幅」に合わせてください
-        frameHeight: 32  // ★ここを画像の「1コマの高さ」に合わせてください
+        frameWidth: 160,  // 実際の横幅
+        frameHeight: 160  // 実際の高さ
     });
     
     this.load.image('wall', 'wall.png');
@@ -81,17 +73,10 @@ function preload() {
 }
 
 function create() {
-    // --- プレイヤーのスプライト設定を修正 ---
-    // もし画像のサイズが32pxでない場合、Phaserはうまく読み込めない可能性があります。
-    // そのため、テクスチャ情報を確認して動的にフレームを設定する方法もありますが、
-    // まずはpreloadでの指定を優先します。
-    
     const walls = this.physics.add.staticGroup();
     interactGroup = this.physics.add.staticGroup();
     let artIndex = 0;
 
-    // --- マップ生成 ---
-    // マップ全体のサイズを計算して、カメラの境界を設定
     const mapWidth = mapData[0].length * TILE_SIZE;
     const mapHeight = mapData.length * TILE_SIZE;
     this.physics.world.setBounds(0, 0, mapWidth, mapHeight);
@@ -102,20 +87,15 @@ function create() {
             const y = row * TILE_SIZE + TILE_SIZE / 2;
             const tileType = mapData[row][col];
 
-            // 床の描画
             let floorTile;
             if (tileType === 3) {
-                // 赤絨毯
                 floorTile = this.add.image(x, y, 'carpet').setDisplaySize(TILE_SIZE, TILE_SIZE);
             } else {
-                // 通常の床
                 floorTile = this.add.image(x, y, 'floor').setDisplaySize(TILE_SIZE, TILE_SIZE);
                 floorTile.setTint(0xbbbbbb);
             }
 
-            // オブジェクトの配置
             if (tileType === 1) {
-                // 壁
                 const wall = this.physics.add.image(x, y, 'wall');
                 wall.setDisplaySize(TILE_SIZE, TILE_SIZE);
                 wall.setTint(0x999999);
@@ -123,62 +103,54 @@ function create() {
                 wall.setImmovable(true);
             } 
             else if (tileType === 2) {
-                // 作品（壁＋額縁）
-                const wall = this.physics.add.image(x, y, 'wall'); // 背景に壁を置く
+                const wall = this.physics.add.image(x, y, 'wall');
                 wall.setDisplaySize(TILE_SIZE, TILE_SIZE);
                 walls.add(wall);
                 wall.setImmovable(true);
 
-                // 作品データ取得
                 const data = artData[artIndex] || { title: 'No Data', desc: '...' };
+                const frame = this.add.rectangle(x, y, 36, 36, 0x8d6e63);
+                const art = this.add.rectangle(x, y, 28, 28, 0x00bcd4);
                 
-                // 額縁風の表現
-                const frame = this.add.rectangle(x, y, 36, 36, 0x8d6e63); // 額縁
-                const art = this.add.rectangle(x, y, 28, 28, 0x00bcd4); // 絵の部分
-                
-                // インタラクト用透明判定
-                // 壁の手前に透明な判定用オブジェクトを置く
-                const interactZone = this.add.zone(x, y + 20, TILE_SIZE, TILE_SIZE); // 少し手前に判定を置く
+                const interactZone = this.add.zone(x, y + 20, TILE_SIZE, TILE_SIZE);
                 this.physics.add.existing(interactZone, true);
                 interactZone.setData('info', data);
                 interactGroup.add(interactZone);
-                
                 artIndex++;
             } 
             else if (tileType === 9) {
-                // 受付
                 const desk = this.add.rectangle(x, y, TILE_SIZE, 30, 0x5d4037);
                 this.physics.add.existing(desk, true);
                 desk.setData('info', receptionData);
                 interactGroup.add(desk);
-                // 受付の人（仮）
                 this.add.circle(x, y - 10, 10, 0xffffff);
             }
         }
     }
 
-    // --- プレイヤー（おばけ）の設定 ---
-    // マップの下の方（入り口付近）に出現させる
+    // --- プレイヤー設定 ---
     player = this.physics.add.sprite(mapWidth / 2, mapHeight - 100, 'ghost');
     player.setDepth(10);
     
-    // スケール調整: ドット絵をきれいに大きく見せる
-    player.setScale(1.5); 
+    // 【重要修正2】 スケール調整
+    // 32px / 160px = 0.2 なので、0.2倍に縮小します。
+    player.setScale(0.2); 
 
-    // 当たり判定のサイズ調整
-    // 画像の余白に合わせて調整してください
-    // ここでは32x32の画像を想定して、少し小さめの判定にします
-    player.body.setSize(20, 20); 
-    player.body.setOffset(6, 6);
+    // 当たり判定の調整
+    // 元の160pxの画像に対して、余白を削る設定をします。
+    // ここでは上下左右に20pxずつの余白があると仮定して、120x120の判定にします。
+    // (0.2倍されるので、実際の判定は24x24pxになります)
+    player.body.setSize(120, 120); 
+    player.body.setOffset(20, 20);
+    
     player.setCollideWorldBounds(true);
 
-    // カメラがプレイヤーを追従するように設定
+    // カメラ設定（少しズームして見やすく）
     this.cameras.main.startFollow(player);
     this.cameras.main.setBounds(0, 0, mapWidth, mapHeight);
-    this.cameras.main.setZoom(1.2); // 少しズームしてドット絵感を強調
+    this.cameras.main.setZoom(1.5); 
 
     // --- アニメーション定義 ---
-    // 1段目: 下, 2段目: 左, 3段目: 右, 4段目: 上
     this.anims.create({
         key: 'down',
         frames: this.anims.generateFrameNumbers('ghost', { start: 0, end: 2 }),
@@ -214,6 +186,7 @@ function create() {
     setupController();
 }
 
+// (update関数以降は変更ありませんが、念のため掲載します)
 function update() {
     if (isModalOpen) {
         player.body.setVelocity(0);
@@ -257,8 +230,6 @@ function update() {
 
 function tryInteract() {
     if (isModalOpen) return;
-
-    // プレイヤーと重なっているinteractGroupのオブジェクトを探す
     game.scene.scenes[0].physics.overlap(player, interactGroup, (player, item) => {
         const info = item.getData('info');
         if (info) {
@@ -282,7 +253,6 @@ function closeModal() {
 document.getElementById('modal-close-btn').addEventListener('click', closeModal);
 
 function setupController() {
-    // スマホ用コントローラーの設定（変更なし）
     const addTouch = (id, dir) => {
         const btn = document.getElementById(id);
         if(!btn) return;
