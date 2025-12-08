@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Museum Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+
+    <div id="ui-layer">
+        
+        <div id="modal">
+            <h2 id="modal-title">TITLE</h2>
+            <div id="modal-content">CONTENT</div>
+            <button class="close-btn" id="modal-close-btn">CLOSE</button>
+        </div>
+
+        <div id="controller">
+            <div class="d-pad">
+                <div class="d-row">
+                    <button id="btn-up" class="ctrl-btn arrow-btn">▲</button>
+                </div>
+                <div class="d-row">
+                    <button id="btn-left" class="ctrl-btn arrow-btn">◀</button>
+                    <div style="width: 50px; height: 50px;"></div>
+                    <button id="btn-right" class="ctrl-btn arrow-btn">▶</button>
+                </div>
+                <div class="d-row">
+                    <button id="btn-down" class="ctrl-btn arrow-btn">▼</button>
+                </div>
+            </div>
+            
+            <div class="action-pad">
+                <button id="btn-select" class="ctrl-btn action-btn">SELECT</button>
+                <button id="btn-cancel" class="ctrl-btn action-btn">CANCEL</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
