@@ -1,26 +1,22 @@
 /* --- CONFIGURATION --- */
 const TILE_SIZE = 50;
 
-// 1=壁, 0=床, 2=作品, 3=カーペット, 9=受付
+// マップデータ
 const mapData = [
-    // 外壁（上）
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    // 左の部屋（作品A, B）        通路          右の部屋（作品C, D）
-    [1, 2, 0, 0, 0, 1, 0, 0, 3, 3, 0, 0, 1, 0, 0, 2, 1],
-    [1, 0, 0, 0, 0, 1, 0, 0, 3, 3, 0, 0, 1, 0, 0, 0, 1],
-    [1, 0, 2, 0, 0, 1, 0, 0, 3, 3, 0, 0, 1, 0, 0, 2, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 1],
-    // 中央ホール（作品E）
-    [1, 1, 1, 0, 0, 1, 0, 0, 3, 3, 0, 0, 1, 0, 0, 1, 1],
-    [1, 0, 0, 0, 0, 1, 0, 0, 2, 2, 0, 0, 1, 0, 0, 0, 1], // 真ん中に大きな展示
-    [1, 0, 0, 0, 0, 1, 0, 0, 3, 3, 0, 0, 1, 0, 0, 0, 1],
-    // エントランス
-    [1, 1, 1, 0, 0, 1, 1, 0, 3, 3, 0, 1, 1, 0, 0, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 9, 9, 0, 0, 0, 0, 0, 0, 1], // 受付
-    [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1], // 入口
-    [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1]  // 外へ
+    [1, 2, 0, 0, 1, 2, 0, 0, 0, 0, 2, 1, 0, 0, 2, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 3, 3, 3, 3, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 3, 3, 3, 3, 0, 0, 0, 0, 0, 1],
+    [1, 1, 0, 0, 1, 1, 3, 3, 3, 3, 1, 1, 0, 0, 1, 1],
+    [1, 2, 0, 0, 0, 0, 3, 3, 3, 3, 0, 0, 0, 0, 2, 1],
+    [1, 0, 0, 0, 0, 0, 3, 3, 3, 3, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ];
+
 const artData = [
     { title: 'WEB SITE', desc: 'コーポレートサイト制作\n使用技術: HTML/CSS/JS' },
     { title: 'APP UI', desc: 'モバイルアプリUIデザイン\nFigmaを使用' },
@@ -38,9 +34,10 @@ const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
+    parent: 'game-container', // 【重要】HTMLのdivの中に描画する指定
     backgroundColor: '#000000',
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.FIT, // 親要素に合わせてリサイズ
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
     physics: {
@@ -60,7 +57,6 @@ const btnState = { up: false, down: false, left: false, right: false };
 
 const game = new Phaser.Game(config);
 
-/* --- PRELOAD --- */
 function preload() {
     this.load.image('ghost', 'player.png');
     this.load.image('wall', 'wall.png');
@@ -68,7 +64,6 @@ function preload() {
     this.load.image('carpet', 'carpet.png');
 }
 
-/* --- CREATE --- */
 function create() {
     const walls = this.physics.add.staticGroup();
     interactGroup = this.physics.add.staticGroup();
@@ -80,12 +75,14 @@ function create() {
             const y = row * TILE_SIZE + TILE_SIZE / 2;
             const tileType = mapData[row][col];
 
+            // 床
             if (tileType === 3) {
                 this.add.image(x, y, 'carpet').setDisplaySize(TILE_SIZE, TILE_SIZE);
             } else {
                 this.add.image(x, y, 'floor').setDisplaySize(TILE_SIZE, TILE_SIZE);
             }
 
+            // 壁・作品・受付
             if (tileType === 1) {
                 const wall = this.physics.add.image(x, y, 'wall');
                 wall.setDisplaySize(TILE_SIZE, TILE_SIZE);
@@ -130,7 +127,6 @@ function create() {
     setupController();
 }
 
-/* --- UPDATE --- */
 function update() {
     if (isModalOpen) {
         player.body.setVelocity(0);
@@ -141,11 +137,9 @@ function update() {
 
     if (cursors.left.isDown || btnState.left) {
         player.body.setVelocityX(-speed);
-        // 【修正】左移動時に反転するよう変更しました（元画像が右向きの場合）
         player.setFlipX(true); 
     } else if (cursors.right.isDown || btnState.right) {
         player.body.setVelocityX(speed);
-        // 【修正】右移動時は反転しない
         player.setFlipX(false);
     }
 
@@ -161,7 +155,6 @@ function update() {
     activeItem = null;
 }
 
-/* --- FUNCTIONS --- */
 function checkItem(player, item) {
     activeItem = item.getData('info');
 }
