@@ -35,8 +35,8 @@ const config = {
     width: 800,
     height: 600,
     parent: 'game-container',
-    backgroundColor: '#050505', // 背景色
-    pixelArt: true, // ドット絵をくっきり表示
+    backgroundColor: '#050505', 
+    pixelArt: true,
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -59,12 +59,10 @@ const btnState = { up: false, down: false, left: false, right: false };
 const game = new Phaser.Game(config);
 
 function preload() {
-    // 【重要】32x32pxで区切って読み込みます
-    // 画像サイズが正しく96x128pxであればこれで正常に分割されます
-    this.load.spritesheet('ghost', 'player.png', { 
-        frameWidth: 32, 
-        frameHeight: 32 
-    });
+    // 【重要修正】
+    // サイズを指定せず、まずは普通の画像として読み込みます。
+    // これにより、画像が大きくても小さくても、プログラム側でサイズを測れるようになります。
+    this.load.image('ghost', 'player.png');
     
     this.load.image('wall', 'wall.png');
     this.load.image('floor', 'floor.png');
@@ -83,16 +81,14 @@ function create() {
             const y = row * TILE_SIZE + TILE_SIZE / 2;
             const tileType = mapData[row][col];
 
-            // 床
             let floorTile;
             if (tileType === 3) {
                 floorTile = this.add.image(x, y, 'carpet').setDisplaySize(TILE_SIZE, TILE_SIZE);
             } else {
                 floorTile = this.add.image(x, y, 'floor').setDisplaySize(TILE_SIZE, TILE_SIZE);
             }
-            floorTile.setTint(0xbbbbbb); // 少し暗く
+            floorTile.setTint(0xbbbbbb);
 
-            // 壁・作品・受付
             if (tileType === 1) {
                 const wall = this.physics.add.image(x, y, 'wall');
                 wall.setDisplaySize(TILE_SIZE, TILE_SIZE);
@@ -126,48 +122,54 @@ function create() {
     }
 
     // --- プレイヤー（おばけ）の設定 ---
-    // 初期位置 400, 500 に生成
+    
+    // 1. 画像から本来のサイズを取得
+    const texture = this.textures.get('ghost');
+    const img = texture.getSourceImage();
+    
+    // 2. 3列×4行であると仮定して、1コマのサイズを計算
+    const frameW = img.width / 3;
+    const frameH = img.height / 4;
+
+    // 3. テクスチャにフレーム情報を登録（スプライトシート化）
+    Phaser.Textures.Parsers.SpriteSheet(texture, 0, 0, 0, { frameWidth: frameW, frameHeight: frameH });
+
+    // 4. スプライト生成
     player = this.physics.add.sprite(400, 500, 'ghost');
+    player.setDepth(10); // 手前に表示
+
+    // 5. 【重要】画面上での表示サイズを調整
+    // 画像が巨大でも、画面上では 48x48px くらいの大きさに見えるように縮小/拡大率を計算
+    const targetSize = 48; // 画面上で表示したいピクセルサイズ
+    const scale = targetSize / frameW; 
+    player.setScale(scale);
+
+    // 6. 当たり判定の調整（見た目に合わせる）
+    // setSizeは元の画像サイズに対する割合で指定するのが安全です
+    player.body.setSize(frameW * 0.6, frameH * 0.6);
+    player.body.setOffset(frameW * 0.2, frameH * 0.4);
     
-    // 【重要】表示順序（Depth）を上げて、床より手前に表示させる
-    player.setDepth(10); 
-    
-    // サイズ調整
-    player.setScale(1.5); 
-    player.setOrigin(0.5, 0.5);
     player.setCollideWorldBounds(true);
-    // 当たり判定のサイズを少し小さくして、歩きやすくする
-    player.body.setSize(20, 20);
-    player.body.setOffset(6, 12);
 
     // --- アニメーション定義 ---
-    // 画像の並び順（左上から右へ 0,1,2...）に基づき設定
-    
-    // 下向き (1行目: 0, 1, 2)
     this.anims.create({
         key: 'down',
         frames: this.anims.generateFrameNumbers('ghost', { start: 0, end: 2 }),
         frameRate: 8,
         repeat: -1
     });
-
-    // 左向き (2行目: 3, 4, 5)
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('ghost', { start: 3, end: 5 }),
         frameRate: 8,
         repeat: -1
     });
-
-    // 右向き (3行目: 6, 7, 8)
     this.anims.create({
         key: 'right',
         frames: this.anims.generateFrameNumbers('ghost', { start: 6, end: 8 }),
         frameRate: 8,
         repeat: -1
     });
-
-    // 上向き (4行目: 9, 10, 11)
     this.anims.create({
         key: 'up',
         frames: this.anims.generateFrameNumbers('ghost', { start: 9, end: 11 }),
@@ -175,7 +177,6 @@ function create() {
         repeat: -1
     });
 
-    // 初期状態は下向きで停止
     player.play('down');
     player.anims.stop();
 
@@ -196,45 +197,31 @@ function update() {
     
     player.body.setVelocity(0);
     const speed = 150;
-    
-    // 移動フラグ
     let moving = false;
 
-    // --- キー入力とアニメーション制御 ---
-    
-    // 左
     if (cursors.left.isDown || btnState.left) {
         player.body.setVelocityX(-speed);
-        // true を渡すことで「同じアニメーションならリセットしない」ようにする
         player.anims.play('left', true);
         moving = true;
     } 
-    // 右
     else if (cursors.right.isDown || btnState.right) {
         player.body.setVelocityX(speed);
         player.anims.play('right', true);
         moving = true;
     }
-    // 上
     else if (cursors.up.isDown || btnState.up) {
         player.body.setVelocityY(-speed);
         player.anims.play('up', true);
         moving = true;
     } 
-    // 下
     else if (cursors.down.isDown || btnState.down) {
         player.body.setVelocityY(speed);
         player.anims.play('down', true);
         moving = true;
     }
 
-    // 移動していない時はアニメーションを止める
     if (!moving) {
         player.anims.stop();
-        
-        // 止まった瞬間のフレームを維持するか、
-        // ニュートラル（真ん中の足踏み）に戻すこともできますが、
-        // いったんはstopのみで自然に見えます。
     }
 
     if (Phaser.Input.Keyboard.JustDown(spaceKey) && activeItem) {
