@@ -1,11 +1,11 @@
-/* --- VARIABLES --- */
+/* --- 変数定義 --- */
 :root {
     --main-bg: #000000;
     --accent-color: #00bcd4;
     --text-color: #ffffff;
 }
 
-/* --- BASE STYLES --- */
+/* --- 基本設定 --- */
 body {
     margin: 0;
     padding: 0;
@@ -13,18 +13,23 @@ body {
     height: 100vh;
     background-color: var(--main-bg);
     font-family: "Courier New", monospace;
-    overflow: hidden;
-    user-select: none;
+    overflow: hidden; /* スクロール禁止 */
+    user-select: none; /* テキスト選択禁止 */
+    -webkit-user-select: none; /* Safari用 */
+    touch-action: none; /* スマホでのピンチズームなどを無効化 */
 }
 
-/* --- CANVAS --- */
+/* --- ゲーム画面 (Canvas) --- */
 canvas {
     border: 2px solid var(--accent-color);
     box-shadow: 0 0 15px var(--accent-color);
     border-radius: 4px;
+    /* キャンバス自体の位置はPhaserが制御しますが、
+       スマホでタップしたときのハイライトを消します */
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* --- UI LAYER --- */
+/* --- UIレイヤー --- */
 #ui-layer {
     position: absolute;
     top: 0;
@@ -32,24 +37,25 @@ canvas {
     width: 100%;
     height: 100%;
     z-index: 10;
-    pointer-events: none;
+    pointer-events: none; /* UIの隙間はクリック透過 */
 }
 
-/* --- MODAL --- */
+/* --- モーダルウィンドウ --- */
 #modal {
     display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 60%;
+    width: 80%; /* スマホで見やすいように幅を広げる */
     max-width: 600px;
     background-color: rgba(0, 0, 0, 0.95);
-    padding: 30px;
+    padding: 20px;
     border: 2px solid var(--accent-color);
     color: var(--text-color);
-    pointer-events: auto;
+    pointer-events: auto; /* ここは操作可能に */
     text-align: center;
+    box-sizing: border-box; /* パディングを含めた幅計算 */
 }
 
 #modal h2 {
@@ -58,17 +64,26 @@ canvas {
     border-bottom: 1px solid var(--accent-color);
     padding-bottom: 10px;
     letter-spacing: 2px;
+    font-size: 1.5rem;
+}
+
+#modal-content {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    text-align: left; /* 本文は左揃えで読みやすく */
 }
 
 .close-btn {
-    margin-top: 20px;
     background: transparent;
     color: var(--accent-color);
-    padding: 10px 30px;
+    padding: 10px 40px;
     cursor: pointer;
     border: 1px solid var(--accent-color);
     font-weight: bold;
-    transition: 0.3s;
+    transition: 0.2s;
+    font-size: 1rem;
+    border-radius: 4px;
 }
 
 .close-btn:hover {
@@ -76,20 +91,22 @@ canvas {
     color: #000;
 }
 
-/* --- CONTROLLER --- */
+/* --- コントローラー全体 --- */
 #controller {
     position: absolute;
-    bottom: 30px;
-    left: 30px;
+    bottom: 20px;
+    width: 100%;
+    padding: 0 20px; /* 左右に余白 */
+    box-sizing: border-box;
     display: flex;
-    gap: 40px;
-    align-items: flex-end;
+    justify-content: space-between; /* 十字キーとボタンを左右端に配置 */
+    align-items: flex-end; /* 下揃え */
     pointer-events: auto;
-    transform-origin: bottom left; 
 }
 
+/* ボタン共通スタイル */
 .ctrl-btn {
-    background: #000;
+    background: rgba(0, 0, 0, 0.6); /* 少し透けさせる */
     border: 1px solid var(--accent-color);
     color: var(--accent-color);
     cursor: pointer;
@@ -100,6 +117,7 @@ canvas {
     transition: 0.1s;
     touch-action: manipulation;
     box-shadow: 0 0 5px var(--accent-color) inset;
+    -webkit-tap-highlight-color: transparent; /* タップ時のグレー背景を消す */
 }
 
 .ctrl-btn:active {
@@ -108,6 +126,7 @@ canvas {
     box-shadow: 0 0 15px var(--accent-color);
 }
 
+/* 十字キー */
 .d-pad {
     display: flex;
     flex-direction: column;
@@ -126,28 +145,55 @@ canvas {
     font-size: 24px;
 }
 
+/* アクションボタン (SELECT/CANCEL) */
 .action-pad {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* 縦に積む */
     gap: 15px;
-    padding-bottom: 10px;
+    padding-bottom: 5px; /* 高さ微調整 */
 }
 
 .action-btn {
-    width: 100px;
-    height: 40px;
+    width: 110px;
+    height: 45px;
     font-size: 14px;
     font-weight: bold;
-    border-radius: 20px;
+    border-radius: 25px; /* 角丸を強く */
     letter-spacing: 1px;
 }
 
-/* --- MEDIA QUERIES --- */
-@media screen and (max-height: 700px) {
+/* --- スマホ向けレスポンシブ対応 (画面幅が狭いとき) --- */
+@media screen and (max-width: 768px) {
+    /* コントローラーの位置調整 */
     #controller {
-        transform: scale(0.8);
-        bottom: 10px;
-        left: 10px;
-        gap: 20px;
+        bottom: 5vh; /* 下から少し浮かせる */
+        padding: 0 5%; /* 左右の余白を調整 */
+    }
+
+    /* ボタンを少し大きくして押しやすくする */
+    .arrow-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+    }
+    
+    .action-btn {
+        width: 100px;
+        height: 50px;
+        font-size: 14px;
+    }
+
+    /* モーダルの文字サイズ調整 */
+    #modal h2 { font-size: 1.2rem; }
+    #modal-content { font-size: 0.9rem; }
+}
+
+/* --- 画面が極端に縦長の場合 (最近のスマホ) --- */
+/* ゲーム画面の下にコントローラーを綺麗に収める調整 */
+@media screen and (orientation: portrait) {
+    #controller {
+        /* 縦画面のときはコントローラー背景を少し暗くしてもいいかも */
+        /* background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); */
+        padding-bottom: 20px;
     }
 }
