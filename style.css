@@ -1,21 +1,19 @@
-/* --- フォントのインポート（日本語対応ドットフォント） --- */
 @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
 
-/* --- 変数定義 --- */
+/* VARIABLES */
 :root {
-    --main-bg: #050505; /* より深い黒 */
+    --main-bg: #050505;
     --accent-color: #00bcd4;
-    --text-color: #e0f7fa; /* 少し青みがかった白 */
+    --text-color: #e0f7fa;
 }
 
-/* --- 基本設定 --- */
+/* BASE SETTINGS */
 body {
     margin: 0;
     padding: 0;
     width: 100vw;
     height: 100vh;
     background-color: var(--main-bg);
-    /* フォントをドット風に変更 */
     font-family: 'DotGothic16', sans-serif; 
     overflow: hidden;
     user-select: none;
@@ -23,17 +21,38 @@ body {
     touch-action: none;
 }
 
-/* --- キャンバス（ゲーム画面）の装飾強化 --- */
+/* GAME CANVAS */
+#game-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
 canvas {
     border: 2px solid var(--accent-color);
-    /* 光るようなエフェクトを強化 */
     box-shadow: 0 0 20px var(--accent-color), 0 0 40px rgba(0, 188, 212, 0.4);
     border-radius: 4px;
     -webkit-tap-highlight-color: transparent;
-    image-rendering: pixelated; /* ドット絵をくっきり表示 */
+    image-rendering: pixelated;
 }
 
-/* --- モーダルのデザイン強化 --- */
+/* MODAL */
+#modal-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    pointer-events: none;
+}
+
 #modal {
     display: none;
     position: absolute;
@@ -42,11 +61,10 @@ canvas {
     transform: translate(-50%, -50%);
     width: 85%;
     max-width: 600px;
-    /* 背景を少し透過させて重厚感を出す */
     background-color: rgba(10, 10, 15, 0.95);
     padding: 30px;
     border: 2px solid var(--accent-color);
-    box-shadow: 0 0 20px rgba(0, 188, 212, 0.2) inset; /* 内側にも光を */
+    box-shadow: 0 0 20px rgba(0, 188, 212, 0.2) inset;
     color: var(--text-color);
     pointer-events: auto;
     text-align: center;
@@ -60,7 +78,7 @@ canvas {
     border-bottom: 2px solid var(--accent-color);
     padding-bottom: 15px;
     letter-spacing: 4px;
-    text-shadow: 0 0 10px var(--accent-color); /* 文字も光らせる */
+    text-shadow: 0 0 10px var(--accent-color);
 }
 
 #modal-content {
@@ -68,31 +86,142 @@ canvas {
     line-height: 1.8;
     margin-bottom: 30px;
     text-align: left;
-    white-space: pre-wrap; /* 改行をそのまま反映 */
+    white-space: pre-wrap;
 }
 
-/* 既存のボタン等のスタイルはそのまま維持してください */
-/* ... (コントローラー関連のCSSは変更なしでOK) ... */
+.close-btn {
+    background: transparent;
+    color: var(--accent-color);
+    padding: 10px 30px;
+    cursor: pointer;
+    border: 1px solid var(--accent-color);
+    font-weight: bold;
+    border-radius: 4px;
+    transition: 0.2s;
+}
 
-/* --- その他の既存コードはそのまま --- */
-#game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1; }
-#modal-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
-.close-btn { background: transparent; color: var(--accent-color); padding: 10px 30px; cursor: pointer; border: 1px solid var(--accent-color); font-weight: bold; border-radius: 4px; transition: 0.2s; }
-.close-btn:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 15px var(--accent-color); }
-#controller-layer { position: absolute; bottom: 30px; left: 30px; display: flex; gap: 40px; align-items: flex-end; z-index: 10; pointer-events: auto; }
-.ctrl-btn { background: rgba(0, 0, 0, 0.6); border: 1px solid var(--accent-color); color: var(--accent-color); cursor: pointer; display: flex; justify-content: center; align-items: center; border-radius: 8px; transition: 0.1s; touch-action: manipulation; box-shadow: 0 0 5px var(--accent-color) inset; -webkit-tap-highlight-color: transparent; }
-.ctrl-btn:active { background: var(--accent-color); color: #000; }
-.d-pad { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.d-row { display: flex; gap: 5px; }
-.arrow-btn { width: 50px; height: 50px; font-size: 24px; }
-.action-pad { display: flex; flex-direction: column; gap: 15px; padding-bottom: 10px; }
-.action-btn { width: 100px; height: 40px; font-size: 14px; font-weight: bold; border-radius: 20px; letter-spacing: 1px; }
+.close-btn:hover {
+    background: var(--accent-color);
+    color: #000;
+    box-shadow: 0 0 15px var(--accent-color);
+}
 
+/* CONTROLLER (DEFAULT/PC) */
+#controller-layer {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    display: flex;
+    gap: 40px;
+    align-items: flex-end;
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.ctrl-btn {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    transition: 0.1s;
+    touch-action: manipulation;
+    box-shadow: 0 0 5px var(--accent-color) inset;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ctrl-btn:active {
+    background: var(--accent-color);
+    color: #000;
+}
+
+.d-pad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.d-row {
+    display: flex;
+    gap: 5px;
+}
+
+.arrow-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+}
+
+.action-pad {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-bottom: 10px;
+}
+
+.action-btn {
+    width: 100px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 20px;
+    letter-spacing: 1px;
+}
+
+/* RESPONSIVE (MOBILE PORTRAIT) */
 @media screen and (max-width: 768px) and (orientation: portrait) {
-    body { display: flex; flex-direction: column; }
-    #game-container { position: relative; width: 100%; height: 60vh; background-color: #000; display: flex; justify-content: center; align-items: center; }
-    canvas { max-width: 100%; max-height: 100%; }
-    #controller-layer { position: relative; bottom: auto; left: auto; width: 100%; height: 40vh; padding: 0 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; background-color: #111; border-top: 2px solid var(--accent-color); }
-    .arrow-btn { width: 60px; height: 60px; font-size: 28px; }
-    .action-btn { width: 100px; height: 50px; }
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #game-container {
+        position: relative;
+        width: 100%;
+        height: 55vh;
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    canvas {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    #controller-layer {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        width: 100%;
+        height: 45vh;
+        padding: 0 20px;
+        padding-bottom: env(safe-area-inset-bottom);
+        box-sizing: border-box;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #111;
+        border-top: 2px solid var(--accent-color);
+    }
+
+    .arrow-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+
+    .d-pad { gap: 2px; }
+    .d-row { gap: 2px; }
+
+    .action-btn {
+        width: 100px;
+        height: 50px;
+    }
 }
