@@ -214,7 +214,7 @@ function update() {
     }
     
     player.body.setVelocity(0);
-    const speed = 150;
+    const speed = 200;
     let moving = false;
 
     if (cursors.left.isDown || btnState.left) {
